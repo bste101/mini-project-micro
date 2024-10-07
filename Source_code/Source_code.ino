@@ -145,13 +145,21 @@ void loop() {
   }*/
   struct tm timeinfo;
   // สร้างข้อความพร้อมวันที่และเวลาปัจจุบัน
-    char timeStr[64];
-    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);  // จัดรูปแบบเป็นวันที่และเวลา
+ // สร้างข้อความสำหรับวันที่
+  char dateStr[32];
+  strftime(dateStr, sizeof(dateStr), "%d-%m-%Y", &timeinfo);  // จัดรูปแบบเป็นวัน-เดือน-ปี
+
+  // สร้างข้อความสำหรับเวลา
+  char timeStr[32];
+  strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);  // จัดรูปแบบเป็นชั่วโมง:นาที:วินาที
 
   if (SW_Flag) {
-    String message = "มีพัสดุมาส่ง ณ วันที่และเวลา: ";
-    message += timeStr;
-    LINE.send(message)
+    String message = "มีพัสดุมาส่ง ณ วันที่: ";
+    message += dateStr;
+    String twomessage = " และเวลา: ";
+    twomeesage += timeStr;
+    message += twomeesage;
+    LINE.send(message);
     if (!Blynk_Flag) {
       Blynk.run();
       LightBulbToggle();
@@ -211,8 +219,11 @@ void loop() {
       display.println(" Door");
       display.println("Locked!");
       display.display();
-      String message = "ประตูปิด ณ วันที่และเวลา: ";
-      message += timeStr;
+      String message = "ประตูปิด ณ วันที่: ";
+      message += dateStr;
+      String twomessage = " และเวลา: ";
+      twomeesage += timeStr;
+      message += twomeesage;
       LINE.send(message)
       ST_Flag = false;
       SW_Flag = false;
