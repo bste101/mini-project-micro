@@ -115,9 +115,9 @@ void setup() {
   pinMode(RLED, OUTPUT);
   display.begin(OLED_I2C_ADDRESS);
   display.setContrast(0); 
-  //display.display();
-  //delay(2000);
-  //display.clearDisplay();
+  display.display();
+  delay(2000);
+  display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(10, 28);
@@ -146,6 +146,15 @@ void loop() {
     Serial.println("Blynk not connected");
   }*/
   struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Failed to obtain time");
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer); // Retry time configuration
+    delay(2000); // Give some time to get the correct time
+    if (!getLocalTime(&timeinfo)) {
+      Serial.println("Still failed to obtain time");
+      return;
+    }
+  }
   // สร้างข้อความพร้อมวันที่และเวลาปัจจุบัน
   char dateStr[32];
   strftime(dateStr, sizeof(dateStr), "%d-%m-%Y", &timeinfo);  // จัดรูปแบบเป็นวัน-เดือน-ปี
@@ -157,9 +166,8 @@ void loop() {
     if (Noti_Flag) {
       String message = "มีพัสดุมาส่ง ณ วันที่: ";
       message += dateStr;
-      String twomessage = " และเวลา: ";
-      twomessage += timeStr;
-      message += twomessage;
+      message += " และเวลา: ";
+      message += timeStr;
       LINE.send(message);
       Noti_Flag = false;
     }
@@ -223,9 +231,8 @@ void loop() {
       display.display();
       String message = "ประตูปิด ณ วันที่: ";
       message += dateStr;
-      String twomessage = " และเวลา: ";
-      twomessage += timeStr;
-      message += twomessage;
+      message += " และเวลา: ";
+      message += timeStr;
       LINE.send(message);
       ST_Flag = false;
       SW_Flag = false;
