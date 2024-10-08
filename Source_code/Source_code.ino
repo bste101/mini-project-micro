@@ -38,6 +38,7 @@ const int daylightOffset_sec = 0;
 
 volatile bool SW_Flag = false;
 volatile bool ST_Flag = false;
+volatile bool Noti_Flag = false;
 static bool Blynk_Flag = false;
 static bool isReply = false;
 int servoPin = 4;
@@ -46,8 +47,10 @@ char ssid[] = "Best";
 char pass[] = "12345678";
 
 void IRAM_ATTR SW_Press() {
+  Noti_Flag = true;
   if (SW_Flag) {
     ST_Flag = true;
+    Noti_Flag = false;
   } 
   SW_Flag = true;
 }
@@ -130,7 +133,6 @@ void setup() {
   //mySensor.beginMag();
   attachInterrupt(digitalPinToInterrupt(SW_PIN), SW_Press, RISING);
   LINE.begin(LINE_TOKEN);
-
    // ตั้งค่า NTP Server
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   delay(2000);
@@ -145,21 +147,23 @@ void loop() {
   }*/
   struct tm timeinfo;
   // สร้างข้อความพร้อมวันที่และเวลาปัจจุบัน
- // สร้างข้อความสำหรับวันที่
   char dateStr[32];
   strftime(dateStr, sizeof(dateStr), "%d-%m-%Y", &timeinfo);  // จัดรูปแบบเป็นวัน-เดือน-ปี
-
   // สร้างข้อความสำหรับเวลา
   char timeStr[32];
   strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);  // จัดรูปแบบเป็นชั่วโมง:นาที:วินาที
 
   if (SW_Flag) {
-    String message = "มีพัสดุมาส่ง ณ วันที่: ";
-    message += dateStr;
-    String twomessage = " และเวลา: ";
-    twomeesage += timeStr;
-    message += twomeesage;
-    LINE.send(message);
+    if (Noti_Flag) {
+      String message = "มีพัสดุมาส่ง ณ วันที่: ";
+      message += dateStr;
+      String twomessage = " และเวลา: ";
+      twomessage += timeStr;
+      message += twomessage;
+      LINE.send(message);
+      Noti_Flag = false;
+    }
+    
     if (!Blynk_Flag) {
       Blynk.run();
       LightBulbToggle();
@@ -198,11 +202,9 @@ void loop() {
         display.setCursor(40, 30);           
         display.printf("%d:%02d", minutes, seconds); 
         display.display();   
-               
         delay(1000);                        
         Blynk.run();  
         if (ST_Flag) {
-          
           ST_Flag = false;
           Blynk.run(); 
           break;
@@ -215,16 +217,16 @@ void loop() {
       display.clearDisplay();
       display.setTextSize(2);
       display.setTextColor(SH110X_WHITE);
-      display.setCursor(10, 20);
+      display.setCursor(30, 20);
       display.println(" Door");
-      display.println("Locked!");
+      display.println("  Locked!");
       display.display();
       String message = "ประตูปิด ณ วันที่: ";
       message += dateStr;
       String twomessage = " และเวลา: ";
-      twomeesage += timeStr;
-      message += twomeesage;
-      LINE.send(message)
+      twomessage += timeStr;
+      message += twomessage;
+      LINE.send(message);
       ST_Flag = false;
       SW_Flag = false;
       Blynk_Flag = false;
